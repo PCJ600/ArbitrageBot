@@ -67,7 +67,7 @@ LOGGING = {
 		},
 		'app': {
 			'handlers': ['console', 'file'],
-            'level': 'DEBUG',
+            'level': 'INFO',
             'propagate': False,
 		},
 	},
@@ -83,8 +83,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_apscheduler',
+    'rest_framework',
 	'app.apps.AppConfig',
-    'django_apscheduler'
 ]
 
 MIDDLEWARE = [
