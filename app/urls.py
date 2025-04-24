@@ -7,5 +7,4 @@ urlpatterns = [
 ]
 
 # Init work
-# register_cronjobs()
-query_funds()
+register_cronjobs()
