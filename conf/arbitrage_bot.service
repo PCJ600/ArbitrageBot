@@ -1,0 +1,12 @@
+[Unit]
+Description=My Django Application Service
+After=network.target
+
+[Service]
+WorkingDirectory=/home/ArbitrageBot
+ExecStart=python3 manage.py runserver localhost:8000
+Restart=on-failure
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target

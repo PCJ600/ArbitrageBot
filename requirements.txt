@@ -2,3 +2,4 @@ Django
 django-apscheduler
 djangorestframework
 chinese_calendar
+pytz

@@ -54,7 +54,7 @@ LOGGING = {
             'encoding': 'utf-8',
         },
         "console": {
-            "level": "DEBUG",
+            "level": "INFO",
             "class": "logging.StreamHandler",
             "formatter": "simple",
         },
@@ -66,7 +66,7 @@ LOGGING = {
 			'propagate': True,
 		},
 		'app': {
-			'handlers': ['console', 'file'],
+			'handlers': ['file'],
             'level': 'INFO',
             'propagate': False,
 		},

@@ -20,8 +20,6 @@ HOLDINGS = {'501302', '160924', '164705', '501305', '501306', '501307'}
 def get_default_holdings():
     return HOLDINGS
 
-
-
 def query_qdii_data():
     try:
         hk_data = query_specific_qdii("https://www.jisilu.cn/data/qdii/qdii_list/A")
@@ -159,13 +157,13 @@ def notify_if_premium(funds_dict):
         logger.error("notify failed %r, tb: %r", e, traceback.format_exc())
 
 def query_funds():
-    """
+    logger.info("query funds start...")
+
     if not is_trading_time():
         logger.debug("not trading time")
         return
 
     time.sleep(random.randint(0, 60))
-    """
 
     raw_data = query_qdii_data()
     if not raw_data:
@@ -178,3 +176,5 @@ def query_funds():
         return
 
     notify_if_premium(funds_dict)
+
+    logger.info("query funds end...")
