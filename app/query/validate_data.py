@@ -52,7 +52,7 @@ def parse_one_fund(row):
         data = row.get('cell')
         serializer = FundDataSerializer(data=data)
         if not serializer.is_valid():
-            logger.error('parse fund error: %r', serializer.errors)
+            logger.warn('parse fund error: %r', serializer.errors)
             return None
         result = serializer.validated_data
         logger.debug('parse fund OK: %r', result)
@@ -64,13 +64,12 @@ def parse_one_fund(row):
 
 def parse_fund_data(qdii_data):
     try:
-        # TODO: backup raw data to database
         row_datas = qdii_data.get('rows')
         funds_dict = {}
         for row in row_datas:
             fund_data = parse_one_fund(row)
             if not fund_data or 'fund_id' not in fund_data:
-                logger.error('parse fund failed, skip data %r', row)
+                logger.warn('parse fund failed, skip data %r', row)
                 continue
             fund_id = fund_data.get('fund_id')
             funds_dict[fund_id] = fund_data

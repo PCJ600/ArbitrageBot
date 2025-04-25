@@ -1,10 +1,10 @@
 from django.urls import include, path
-from app import views
+from app.views import TestView
 from app.crons.cronjobs import register_cronjobs
-from app.query.query_funds import query_funds
+
 
 urlpatterns = [
+    path('test/', TestView.as_view(), name='test'),
 ]
 
-# Init work
 register_cronjobs()

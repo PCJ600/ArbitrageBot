@@ -50,25 +50,14 @@ class NotifyHandler:
         try:
             resp = requests.post(url, json=body, headers=headers, timeout=(10,30))
             if resp.status_code != 200:
-                logger.error("notify api failed, http_code: %r", resp.status_code)
+                logger.error("send message failed, http_code: %r", resp.status_code)
                 return
 
             resp_data = resp.json()
             resp_code = resp_data.get('code')
-            # TODO: AuditLog 记录到数据库
-            logging.info("send message done, resp_data: %r", resp_data)
+            logging.info("send message %r, resp_data: %r", message, resp_data)
         except Exception as e:
             logging.error("send message exception: %r, tb: %r", e, traceback.format_exc())
 
 
-def init_notify_handler():
-    global notify_handler
-    notify_handler = NotifyHandler()
-    logger.info("init notify handler: %r", notify_handler)
-    #traceback.print_stack()
-
 notify_handler = NotifyHandler()
-
-if __name__ == '__main__':
-    init_notify_handler()
-    notify_handler.send_message("test")

@@ -22,7 +22,7 @@ def is_trading_time():
 
 def is_near_market_close():
     start_time = time(14, 30)
-    end_time = time(14, 45)
+    end_time = time(14, 50)
 
     now = datetime.now().time()
     return start_time <= now <= end_time

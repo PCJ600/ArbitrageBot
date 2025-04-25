@@ -8,7 +8,6 @@ import threading
 import logging
 logger = logging.getLogger('app')
 
-
 # refer to https://apscheduler.readthedocs.io/en/latest/userguide.html
 class Cronjobs:
     _instance = None
@@ -26,12 +25,7 @@ class Cronjobs:
     def register_all_cronjobs(self):
         self.scheduler = BackgroundScheduler()
         self.scheduler.add_jobstore(MemoryJobStore(), 'default')
-        # TODO: uncomment it
-        #self.scheduler.add_job(id="query_funds", func=query_funds, trigger='interval', minutes=7, replace_existing=True)
-
-        # daily
-        #self.scheduler.add_job(id="update_va_token", func=update_va_token, trigger='interval', days=1, replace_existing=True)
-
+        self.scheduler.add_job(id="query_funds", func=query_funds, trigger='interval', minutes=7, replace_existing=True)
         self.scheduler.start()
 
 

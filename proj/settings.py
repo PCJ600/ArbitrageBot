@@ -26,7 +26,7 @@ if not os.path.exists(LOG_DIR):
 SECRET_KEY = 'django-insecure-y$3ke0l$%@wlrkt+kmr*9&7-lj1e9xf^-140bnwh8qj+3)ph!q'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['localhost']
 # https://pythondjango.cn/django/advanced/14-logging/
