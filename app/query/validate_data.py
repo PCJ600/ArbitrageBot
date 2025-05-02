@@ -69,7 +69,7 @@ def parse_fund_data(qdii_data):
         for row in row_datas:
             fund_data = parse_one_fund(row)
             if not fund_data or 'fund_id' not in fund_data:
-                logger.warn('parse fund failed, skip data %r', row)
+                logger.debug('parse fund failed, skip data %r', row)
                 continue
             fund_id = fund_data.get('fund_id')
             funds_dict[fund_id] = fund_data

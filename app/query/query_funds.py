@@ -9,6 +9,7 @@ from django.db.models import F
 
 from app.query.validate_data import parse_fund_data
 from app.query.trading_time import is_trading_time, is_near_market_close
+from app.query.discount_redumption import is_discount_arbitrage_possible
 from app.models import FundNotification
 from app.notify.notify import notify_handler
 
@@ -16,7 +17,7 @@ logger = logging.getLogger('app')
 
 MAX_QUERY_SIZE  = 1 * 1024 * 1024 # response size limits to 1 MB
 
-HOLDINGS = {'501302', '160924', '164705', '501305', '501306', '501307'}
+HOLDINGS = {'160924', '164705', '160717', '161831', '501301', '501302', '501305', '501306', '501307', '501310'}
 def get_default_holdings():
     return HOLDINGS
 
@@ -138,12 +139,14 @@ def notify_if_premium(funds_dict):
             logger.debug("fund_id: %r, discount: %r, apply_status: %r", fund_id, discount_rt, apply_status)
 
             if fund_id in my_holdings:
-                # 对于持有的基金, 盘中溢价>5%通知一次; 临近收盘溢价>1.2%且开放申购, 通知一次
+                # 对于持有的基金, 盘中溢价>5%通知一次; 临近收盘溢价>3%且开放申购, 通知一次; 临近收盘可以折价套利, 通知一次
                 if not is_near_market_close():
                     if discount_rt > 0.05:
                         funds_need_notify.append(fund)
                 else:
-                    if open_to_investors(apply_status) and discount_rt > 0.012:
+                    if open_to_investors(apply_status) and discount_rt > 0.03:
+                        funds_need_notify.append(fund)
+                    elif is_discount_arbitrage_possible(fund_id, discount_rt):
                         funds_need_notify.append(fund)
             else:
                 # 对于未持有的基金, 盘中不通知; 临近收盘时溢价>5%且小额开放申购, 通知一次
