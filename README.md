@@ -30,5 +30,9 @@ systemctl start arbitrage_bot.service
 systemctl enable arbitrage_bot.service
 ```
 
+## TODO
+* 申购卖出套利, 显示买1价/量
+* 买入赎回套利, 显示卖1价/量
+
 # Doc
 [https://www.pushplus.plus/doc/](https://www.pushplus.plus/doc/)

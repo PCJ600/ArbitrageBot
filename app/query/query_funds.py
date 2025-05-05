@@ -139,12 +139,12 @@ def notify_if_premium(funds_dict):
             logger.debug("fund_id: %r, discount: %r, apply_status: %r", fund_id, discount_rt, apply_status)
 
             if fund_id in my_holdings:
-                # 对于持有的基金, 盘中溢价>5%通知一次; 临近收盘溢价>3%且开放申购, 通知一次; 临近收盘可以折价套利, 通知一次
+                # 对于持有的基金, 盘中溢价>5%通知一次; 临近收盘溢价>1.1%且开放申购, 通知一次; 临近收盘可以折价套利, 通知一次
                 if not is_near_market_close():
                     if discount_rt > 0.05:
                         funds_need_notify.append(fund)
                 else:
-                    if open_to_investors(apply_status) and discount_rt > 0.03:
+                    if open_to_investors(apply_status) and discount_rt > 0.011:
                         funds_need_notify.append(fund)
                     elif is_discount_arbitrage_possible(fund_id, discount_rt):
                         funds_need_notify.append(fund)
