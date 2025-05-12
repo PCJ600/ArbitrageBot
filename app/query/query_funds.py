@@ -136,7 +136,7 @@ def notify_if_premium(funds_dict):
 
             discount_rt = fund.get('discount_rt')
             apply_status = fund.get('apply_status')
-            logger.debug("fund_id: %r, discount: %r, apply_status: %r", fund_id, discount_rt, apply_status)
+            logger.info("fund_id: %r, discount: %r, apply_status: %r", fund_id, discount_rt, apply_status)
 
             if fund_id in my_holdings:
                 # 对于持有的基金, 盘中溢价>5%通知一次; 临近收盘溢价>1.1%且开放申购, 通知一次; 临近收盘可以折价套利, 通知一次
@@ -144,7 +144,7 @@ def notify_if_premium(funds_dict):
                     if discount_rt > 0.05:
                         funds_need_notify.append(fund)
                 else:
-                    if open_to_investors(apply_status) and discount_rt > 0.011:
+                    if open_to_investors(apply_status) and discount_rt > 0.015:
                         funds_need_notify.append(fund)
                     elif is_discount_arbitrage_possible(fund_id, discount_rt):
                         funds_need_notify.append(fund)
