@@ -39,6 +39,7 @@ class FundDataSerializer(serializers.Serializer):
     estimate_value = serializers.DecimalField(max_digits=10, decimal_places=4)
     discount_rt = PercentageField()
     apply_status = serializers.CharField(max_length=50)
+    redeem_status = serializers.CharField(max_length=50)
 
     def validate_fund_id(self, value):
         if not value.isdigit() or len(value) != 6:

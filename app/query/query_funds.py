@@ -107,7 +107,7 @@ def notify_to_my_phone(fund_list):
             fund_id = fund.get('fund_id')
             add_notify_count_to_DB(fund_id)
             discount_percent = decimal_to_percentage(fund.get('discount_rt'))
-            one_msg = '{} {} 溢价{} {}'.format(fund.get('fund_id'), fund.get('fund_nm'), discount_percent, fund.get('apply_status'))
+            one_msg = '{} {} 溢价{} {} {}'.format(fund.get('fund_id'), fund.get('fund_nm'), discount_percent, fund.get('apply_status'), fund.get('redeem_status'))
             message_list.append(one_msg)
 
         for msg in message_list:
@@ -136,7 +136,8 @@ def notify_if_premium(funds_dict):
 
             discount_rt = fund.get('discount_rt')
             apply_status = fund.get('apply_status')
-            logger.info("fund_id: %r, discount: %r, apply_status: %r", fund_id, discount_rt, apply_status)
+            redeem_status = fund.get('redeem_status')
+            logger.info("fund_id: %r, discount: %r, apply_status: %r, redeem_status: %r", fund_id, discount_rt, apply_status, redeem_status)
 
             if fund_id in my_holdings:
                 # 对于持有的基金, 盘中溢价>5%通知一次; 临近收盘溢价>1.1%且开放申购, 通知一次; 临近收盘可以折价套利, 通知一次
