@@ -6,6 +6,7 @@ import logging
 import traceback
 from datetime import date
 from django.db.models import F
+from django.db import connection
 
 from app.query.validate_data import parse_fund_data
 from app.query.trading_time import is_trading_time, is_near_market_close
@@ -107,7 +108,7 @@ def notify_to_my_phone(fund_list):
             fund_id = fund.get('fund_id')
             add_notify_count_to_DB(fund_id)
             discount_percent = decimal_to_percentage(fund.get('discount_rt'))
-            one_msg = '{} {} 溢价{} {} {}'.format(fund.get('fund_id'), fund.get('fund_nm'), discount_percent, fund.get('apply_status'), fund.get('redeem_status'))
+            one_msg = '{} {} {} {}'.format(fund.get('fund_id'), discount_percent, fund.get('apply_status'), fund.get('redeem_status'))
             message_list.append(one_msg)
 
         for msg in message_list:
@@ -162,6 +163,8 @@ def notify_if_premium(funds_dict):
 
 def query_funds():
     logger.info("query funds start...")
+
+    connection.close_if_unusable_or_obsolete()
 
     if not is_trading_time():
         logger.debug("not trading time")

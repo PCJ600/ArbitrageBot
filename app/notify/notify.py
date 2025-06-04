@@ -44,7 +44,7 @@ class NotifyHandler:
         }
         body = {
             "token": self.token,
-            "title": "基金交易提醒",
+            "title": message,
             "content": message
 		}
         try:
