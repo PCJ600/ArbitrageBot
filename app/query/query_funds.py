@@ -102,17 +102,14 @@ def notify_to_my_phone(fund_list):
         return
 
     logger.info("%r funds need notify", len(fund_list))
-    message_list = []
     try:
         for fund in fund_list:
             fund_id = fund.get('fund_id')
             add_notify_count_to_DB(fund_id)
             discount_percent = decimal_to_percentage(fund.get('discount_rt'))
-            one_msg = '{} {} {} {}'.format(fund.get('fund_id'), discount_percent, fund.get('apply_status'), fund.get('redeem_status'))
-            message_list.append(one_msg)
-
-        for msg in message_list:
-            notify_handler.send_message(msg)
+            msg = '{} {} {}'.format(discount_percent, fund.get('apply_status'), fund.get('redeem_status'))
+            title = fund_id
+            notify_handler.send_message(msg, title)
 
     except Exception as e:
         logger.error("notify failed: %r, tb: %r", e, traceback.format_exc())

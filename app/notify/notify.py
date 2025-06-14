@@ -36,7 +36,7 @@ class NotifyHandler:
             raise ValueError('token not found in config.ini')
 
 
-    def send_message(self, message):
+    def send_message(self, message, title):
         url = 'https://www.pushplus.plus/send'
         headers = {
             'Content-Type': 'application/json',
@@ -44,7 +44,7 @@ class NotifyHandler:
         }
         body = {
             "token": self.token,
-            "title": message,
+            "title": title,
             "content": message
 		}
         try:
