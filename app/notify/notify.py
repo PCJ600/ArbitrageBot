@@ -23,7 +23,7 @@ class NotifyHandler:
         self.init_token()
 
     def init_token(self):
-        config_file='/usr/ArbitrageBot/config.ini'
+        config_file='/config.ini'
         if not os.path.exists(config_file):
             raise FileNotFoundError(f'config.ini not found')
 

@@ -1,0 +1,54 @@
+# 忽略所有 .pyc 编译文件
+*.pyc
+__pycache__/
+
+# 忽略开发数据库
+db.sqlite3
+*.sqlite3
+
+# 忽略 IDE 配置文件
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 忽略本地环境文件（应在运行时注入）
+.env
+.env.local
+.env*.local
+
+# 忽略静态文件（生产环境应重新收集）
+/static/
+/media/
+
+# 忽略日志文件
+*.log
+logs/
+
+# 忽略测试相关文件
+/tests/
+/coverage/
+
+# 忽略 macOS 系统文件
+.DS_Store
+
+# 忽略临时文件
+*.tmp
+*.temp
+
+# 忽略文档文件
+/docs/
+*.md
+
+# 忽略前端构建文件（如果前后端分离）
+/node_modules/
+/dist/
+/build/
+
+# 忽略备份文件
+*.bak
+*.backup
+
+# 忽略 Docker 多阶段构建的中间镜像
+**/*-debug
+**/*-dev

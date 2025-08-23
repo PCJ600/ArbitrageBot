@@ -3,3 +3,5 @@ django-apscheduler
 djangorestframework
 chinese_calendar
 pytz
+requests
+mysqlclient

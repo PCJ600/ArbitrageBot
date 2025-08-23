@@ -1,0 +1,19 @@
+services:
+  arbitrage:
+    image: arbitrage:latest
+    container_name: arbitrage_app
+    restart: unless-stopped
+    networks:
+      - my_network
+    environment:
+      - DB_HOST=172.31.10.39
+    ports:
+      - "8888:8000"
+    volumes:
+      - /config.ini:/config.ini:ro
+
+networks:
+  my_network:
+    ipam:
+      config:
+        - subnet: 172.18.0.0/16

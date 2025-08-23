@@ -1,44 +1,65 @@
 # ArbitrageBot
 
 # Requirements
-* RHEL 9.0 x86_64
-* MySQL 8.0
+* RHEL 9.0/Debian 12 x86_64
+* Python 3.9
 * Django
+* MySQL 8.0
 
 # How To Start
 
-## configure your pushplus token
+## Configure your pushplus token on Host
+
 ```
-/usr/ArbitrageBot/config.ini
+/config.ini
 [DEFAULT]
 token = 12**2b
 ```
+refer to [https://www.pushplus.plus/doc/](https://www.pushplus.plus/doc/)
 
-## configure your holdings in `query_funds.py`
+## Configure your holdings in `qdii.py` and `ashare_lof.py`
 
-## run django project
+## Run on Host
+
 ```
+# Install dependencies
+rpm -i deps/mysql84-community-release-el8-2.noarch.rpm
+dnf install -y python3-devel mysql-devel
+pip3 install -r requirements.txt
+
+# Make migrations
 python3 manage.py makemigrations
 python3 manage.py migrate
-python3 manage.py runserver
-```
 
-## run testcases
-```
-python3 manage.py test # Run all testcases.
-python manage.py test app.tests.FundsNotifyTestCase # Run single testcase.
-```
+# Run in Host
+python3 manage.py runserver localhost:8000
 
-## auto-restart
-```
+# Auto-restart by Systemd
 cp conf/arbitrage_bot.service /usr/lib/systemd/system/
 systemctl start arbitrage_bot.service
 systemctl enable arbitrage_bot.service
 ```
 
-## TODO
-* 申购卖出套利, 显示买1价/量
-* 买入赎回套利, 显示卖1价/量
+## Run in Docker
 
-# Doc
-[https://www.pushplus.plus/doc/](https://www.pushplus.plus/doc/)
+```
+# Build image
+./docker-build.sh
+
+# Grant docker subnet access to database, for example
+CREATE USER 'root'@'172.18.%' IDENTIFIED BY 'your_password';
+GRANT ALL PRIVILEGES ON your_database.* TO 'root'@'172.18.%';
+FLUSH PRIVILEGES;
+
+# Run in Docker
+cd manifest/deploy/
+docker compose up -d # Run
+docker compose down # Stop
+```
+
+## run testcases
+
+```
+python3 manage.py test # Run all testcases.
+python manage.py test app.tests.FundsNotifyTestCase # Run single testcase.
+```
