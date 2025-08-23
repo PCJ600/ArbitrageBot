@@ -23,7 +23,7 @@ def is_discount_arbitrage_possible(fund_id, discount_rate):
     if fund_id not in g_fund_redemption_rates:
         return False
 
-    # 实时折价率扣除赎回费后有0.7%的利润空间, 可以套利
+    # 实时折价率扣除赎回费后有0.6%的利润空间, 可以套利
     cost = g_fund_redemption_rates.get(fund_id)
     return abs(discount_rate) - cost > 0.006
 
@@ -31,4 +31,3 @@ def is_discount_arbitrage_possible(fund_id, discount_rate):
 if __name__ == "__main__":
     print(is_discount_arbitrage_possible('501305', -0.02)) # expected: True
     print(is_discount_arbitrage_possible('501305', -0.01)) # expected: False
-

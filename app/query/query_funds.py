@@ -9,7 +9,7 @@ from django.db.models import F
 from django.db import connection
 
 from app.query.validate_data import parse_fund_data
-from app.query.trading_time import is_trading_time, is_near_market_close
+from app.query.trading_time import is_trading_time, is_near_close
 from app.query.discount_redumption import is_discount_arbitrage_possible
 from app.models import FundNotification
 from app.notify.notify import notify_handler
@@ -18,7 +18,6 @@ logger = logging.getLogger('app')
 
 MAX_QUERY_SIZE  = 1 * 1024 * 1024 # response size limits to 1 MB
 
-HOLDINGS = {'160924', '164705', '160717', '161831', '501301', '501302', '501305', '501306', '501307', '501310'}
 def get_default_holdings():
     return HOLDINGS
 
@@ -54,7 +53,6 @@ def query_specific_qdii(base_url):
     }
 
     try:
-        time.sleep(random.uniform(3, 5))
         resp = requests.get(base_url, headers=headers, params=params, timeout=(10,30))
         if resp.status_code == 200:
             content = resp.content
@@ -71,8 +69,6 @@ def query_specific_qdii(base_url):
     except Exception as e:
         logger.error("Query qdii failed: %r, tb: %r", e, traceback.format_exc())
         return None
-
-
 
 def has_notified_today(fund_id):
     today = date.today()
@@ -115,13 +111,6 @@ def notify_to_my_phone(fund_list):
         logger.error("notify failed: %r, tb: %r", e, traceback.format_exc())
 
 
-# apply_status maybe in ['限100', '开放申购', '限5千']
-def open_to_investors(apply_status):
-    return apply_status not in ['暂停申购']
-
-def limited_open_to_investors(apply_status):
-    return apply_status not in ['暂停申购', '开放申购']
-
 
 # If LOF/ETF can arbitrage, notify to my phone.
 def notify_if_premium(funds_dict):
@@ -139,17 +128,17 @@ def notify_if_premium(funds_dict):
 
             if fund_id in my_holdings:
                 # 对于持有的基金, 盘中溢价>5%通知一次; 临近收盘溢价>1.1%且开放申购, 通知一次; 临近收盘可以折价套利, 通知一次
-                if not is_near_market_close():
+                if not is_near_close():
                     if discount_rt > 0.05:
                         funds_need_notify.append(fund)
                 else:
-                    if open_to_investors(apply_status) and discount_rt > 0.015:
+                    if open_to_investors(apply_status) and discount_rt > 0.011:
                         funds_need_notify.append(fund)
                     elif is_discount_arbitrage_possible(fund_id, discount_rt):
                         funds_need_notify.append(fund)
             else:
                 # 对于未持有的基金, 盘中不通知; 临近收盘时溢价>5%且小额开放申购, 通知一次
-                if not is_near_market_close():
+                if not is_near_close():
                     continue
                 if limited_open_to_investors(apply_status) and discount_rt > 0.05:
                     funds_need_notify.append(fund)
@@ -157,6 +146,7 @@ def notify_if_premium(funds_dict):
         notify_to_my_phone(funds_need_notify)
     except Exception as e:
         logger.error("notify failed %r, tb: %r", e, traceback.format_exc())
+
 
 def query_funds():
     logger.info("query funds start...")
@@ -167,14 +157,12 @@ def query_funds():
         logger.debug("not trading time")
         return
 
-    time.sleep(random.randint(0, 60))
-
-    raw_data = query_qdii_data()
-    if not raw_data:
+    qdii_data = query_qdii_data()
+    if not qdii_data:
         logger.error("query fund data failed")
         return
 
-    funds_dict = parse_fund_data(raw_data)
+    funds_dict = parse_fund_data(qdii_data, lof_data)
     if not funds_dict:
         logger.error("parse fund data failed")
         return

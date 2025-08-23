@@ -27,7 +27,7 @@ def is_trading_time():
     return (trading_morning_start <= current_time <= trading_morning_end) or (trading_afternoon_start <= current_time <= trading_afternoon_end)
 
 
-def is_near_market_close():
+def is_near_close():
     start_time = time(14, 30)
     end_time = time(14, 50)
     now = datetime.now(china_tz).time()

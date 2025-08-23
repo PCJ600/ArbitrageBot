@@ -23,6 +23,11 @@ python3 manage.py migrate
 python3 manage.py runserver
 ```
 
+## run testcases
+```
+python3 manage.py test
+```
+
 ## auto-restart
 ```
 cp conf/arbitrage_bot.service /usr/lib/systemd/system/

@@ -33,46 +33,31 @@ ALLOWED_HOSTS = ['localhost']
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "filters": {"require_debug_false": {"()": "django.utils.log.RequireDebugFalse"}},
     "formatters": {
-        "verbose": {
-            "format": "%(levelname)s %(asctime)s %(module)s "
-            "%(process)d %(thread)d %(message)s"
-        },
-        'simple': {
-            'format': '[%(levelname)s][%(asctime)s][%(filename)s:%(lineno)d]%(message)s'
+        "simple": {
+            'format': '[%(levelname)s][%(asctime)s][%(filename)s:%(lineno)d] %(message)s'
         },
     },
     "handlers": {
-        'file': {
-            'level': "INFO", 
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': os.path.join(LOG_DIR,'django.log'),
-            'maxBytes': 1024 * 1024 * 10,
-            'backupCount': 5,
-            'formatter': 'simple',
-            'encoding': 'utf-8',
-        },
         "console": {
             "level": "INFO",
             "class": "logging.StreamHandler",
             "formatter": "simple",
         },
     },
-	'loggers': {
-		'django': {
-			'handlers': ['file'],
-			'level': 'INFO',
-			'propagate': True,
-		},
-		'app': {
-			'handlers': ['file'],
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
             'level': 'INFO',
             'propagate': False,
-		},
-	},
+        },
+        'app': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
 }
-
 
 # Application definition
 
