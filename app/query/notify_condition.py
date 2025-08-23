@@ -4,7 +4,18 @@ from typing import Dict, List, Tuple, Set
 
 logger = logging.getLogger('app')
 
-# 硬编码持有的基金列表
+FUND_REDEMPTION_FEES = {
+    '501305': 0.1,
+    '501306': 0.1,
+    '501307': 0.1,
+    '164705': 0.0,
+    '501310': 0.5,
+    '501301': 0.5,
+    '501302': 0.5,
+    '160924': 0.5,
+    '160717': 0.5,
+    '161831': 0.5
+}
 
 def check_notify_condition(
     fund_id: str,
@@ -24,26 +35,42 @@ def check_notify_condition(
     :return: 是否满足通知条件
     """
 
-    def is_open_to_invest(status: str) -> bool:
+    def is_open_to_invest(apply_status: str) -> bool:
         """判断是否开放申购（完全开放）"""
         return apply_status not in ['暂停申购']
     
-    def is_limited_open(status: str) -> bool:
+    def is_limited_open(apply_status: str) -> bool:
         """判断是否小额开放申购"""
         return apply_status not in ['暂停申购', '开放申购']
     
-    def is_redeemable(status: str) -> bool:
+    def is_redeemable(redeem_status: str) -> bool:
         """判断是否开放赎回"""
-        return "开放赎回" in status
+        return "开放赎回" in redeem_status
     
-    def is_significant_discount(premium: float) -> bool:
-        """判断是否有显著折价（用于套利）"""
-        return premium < -1.0  # 折价超过1%
-
-    is_near_close = True # TODO: remove it
-    is_holding = True # TODO: remove it 
-    if premium_rate < 3: # TODO: remove it
-        return False
+    def is_significant_discount(fund_id: str, premium: float) -> bool:
+        """
+        判断是否有显著折价（用于套利）
+        
+        参数说明:
+        - fund_id: 基金代码
+        - premium: 溢价率（不带百分号，如-1.0表示1%折价）
+        
+        返回:
+        - True: 当折价空间（考虑赎回费后）足够
+        - False: 不满足条件
+        """
+        # 获取该基金的赎回费率（不带百分号），如果没有则使用默认阈值1%
+        redemption_fee = FUND_REDEMPTION_FEES.get(fund_id, None)
+        
+        if redemption_fee is not None:
+            # 指定基金：要求折价 > (赎回费 + 0.6%)
+            required_discount = redemption_fee + 0.6
+        else:
+            # 非指定基金：默认要求折价 > 1%
+            required_discount = 1.0
+        
+        # premium是负值表示折价，所以判断是否小于负的required_discount
+        return premium < -required_discount
 
     # 对于持有的基金
     if is_holding:
@@ -56,7 +83,7 @@ def check_notify_condition(
             return True
         
         # 临近收盘可以折价套利，通知一次
-        if is_near_close and is_redeemable(redeem_status) and is_significant_discount(premium_rate):
+        if is_near_close and is_redeemable(redeem_status) and is_significant_discount(fund_id, premium_rate):
             return True
     
     # 对于未持有的基金

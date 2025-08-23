@@ -8,73 +8,18 @@ from datetime import date
 from django.db.models import F
 from django.db import connection
 
-from app.query.validate_data import parse_fund_data
-from app.query.trading_time import is_trading_time, is_near_close
-from app.query.discount_redumption import is_discount_arbitrage_possible
+from app.query.trading_time import is_trading_time
 from app.models import FundNotification
 from app.notify.notify import notify_handler
+from app.query.ashare_lof import get_ashare_lof_notify_list
+from app.query.qdii import get_qdii_notify_list
 
 logger = logging.getLogger('app')
-
-MAX_QUERY_SIZE  = 1 * 1024 * 1024 # response size limits to 1 MB
-
-def get_default_holdings():
-    return HOLDINGS
-
-def query_qdii_data():
-    try:
-        hk_data = query_specific_qdii("https://www.jisilu.cn/data/qdii/qdii_list/A")
-        us_data = query_specific_qdii("https://www.jisilu.cn/data/qdii/qdii_list/E")
-        commodity_data = query_specific_qdii("https://www.jisilu.cn/data/qdii/qdii_list/C")
-
-        logger.info("query qdii data, hk: %r, us: %r, co: %r", len(hk_data.get('rows')), len(us_data.get('rows')), len(commodity_data.get('rows')))
-
-        qdii_data = {'rows': []}
-        qdii_data['rows'].extend(hk_data.get('rows'))
-        qdii_data['rows'].extend(us_data.get('rows'))
-        qdii_data['rows'].extend(commodity_data.get('rows'))
-        return qdii_data
-    except Exception as e:
-        logger.error("Query qdii data failed: %r, tb: %r", e, traceback.format_exc())
-        return None
-
-def query_specific_qdii(base_url):
-    timestamp = int(time.time() * 1000)
-    params = {
-        "___jsl": f"LST___t={timestamp}",
-        "only_lof": "y",
-    }
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
-        "Referer": "https://www.jisilu.cn/data/qdii/",
-        "Accept": "application/json, text/javascript, */*; q=0.01",
-        "X-Requested-With": "XMLHttpRequest",
-        # "Cookie": "auto_reload_qdiia=true; kbz_newcookie=1; kbzw__user_login=your_cookie_value_here" # Maybe we need to login jisilu
-    }
-
-    try:
-        resp = requests.get(base_url, headers=headers, params=params, timeout=(10,30))
-        if resp.status_code == 200:
-            content = resp.content
-            content_size = len(content)
-            if content_size > MAX_QUERY_SIZE:
-                raise ValueError('resp oversize: %r bytes', content_size)
-
-            data = json.loads(content)
-            logger.debug("query qdii data: %r", data)
-            return data
-        else:
-            logger.error("Query qdii failed, url: %r, http_code: %r", base_url, resp.status_code)
-            return None
-    except Exception as e:
-        logger.error("Query qdii failed: %r, tb: %r", e, traceback.format_exc())
-        return None
 
 def has_notified_today(fund_id):
     today = date.today()
     exists = FundNotification.objects.filter(fund_id=fund_id, notify_date=today).exists()
     return exists
-
 
 def add_notify_count_to_DB(fund_id):
     today = date.today()
@@ -84,89 +29,30 @@ def add_notify_count_to_DB(fund_id):
     else:
         FundNotification.objects.create(fund_id=fund_id, notify_date=today, notify_count=1)
 
-def decimal_to_percentage(decimal, decimals=2):
-    percentage = decimal * 100
-    formatted_percentage = f"{percentage:.{decimals}f}%"
-    return formatted_percentage
-
-
-# 每个基金代码当天最多通知一次, 一次通知最多20条记录
-def notify_to_my_phone(fund_list):
-    fund_list = sorted(fund_list, key=lambda x: x.get('discount_rt'), reverse=True)
-    fund_list = fund_list[:20]
-    if len(fund_list) == 0:
-        return
-
-    logger.info("%r funds need notify", len(fund_list))
-    try:
-        for fund in fund_list:
-            fund_id = fund.get('fund_id')
-            add_notify_count_to_DB(fund_id)
-            discount_percent = decimal_to_percentage(fund.get('discount_rt'))
-            msg = '{} {} {}'.format(discount_percent, fund.get('apply_status'), fund.get('redeem_status'))
-            title = fund_id
-            notify_handler.send_message(msg, title)
-
-    except Exception as e:
-        logger.error("notify failed: %r, tb: %r", e, traceback.format_exc())
-
-
-
-# If LOF/ETF can arbitrage, notify to my phone.
-def notify_if_premium(funds_dict):
-    my_holdings = get_default_holdings()
-    funds_need_notify = []
-    try:
-        for fund_id, fund in funds_dict.items():
-            if has_notified_today(fund_id):
-                continue
-
-            discount_rt = fund.get('discount_rt')
-            apply_status = fund.get('apply_status')
-            redeem_status = fund.get('redeem_status')
-            logger.info("fund_id: %r, discount: %r, apply_status: %r, redeem_status: %r", fund_id, discount_rt, apply_status, redeem_status)
-
-            if fund_id in my_holdings:
-                # 对于持有的基金, 盘中溢价>5%通知一次; 临近收盘溢价>1.1%且开放申购, 通知一次; 临近收盘可以折价套利, 通知一次
-                if not is_near_close():
-                    if discount_rt > 0.05:
-                        funds_need_notify.append(fund)
-                else:
-                    if open_to_investors(apply_status) and discount_rt > 0.011:
-                        funds_need_notify.append(fund)
-                    elif is_discount_arbitrage_possible(fund_id, discount_rt):
-                        funds_need_notify.append(fund)
-            else:
-                # 对于未持有的基金, 盘中不通知; 临近收盘时溢价>5%且小额开放申购, 通知一次
-                if not is_near_close():
-                    continue
-                if limited_open_to_investors(apply_status) and discount_rt > 0.05:
-                    funds_need_notify.append(fund)
-
-        notify_to_my_phone(funds_need_notify)
-    except Exception as e:
-        logger.error("notify failed %r, tb: %r", e, traceback.format_exc())
-
-
-def query_funds():
-    logger.info("query funds start...")
-
+def monitor_funds_and_notify():
+    logger.debug("query funds start...")
     connection.close_if_unusable_or_obsolete()
 
     if not is_trading_time():
         logger.debug("not trading time")
         return
 
-    qdii_data = query_qdii_data()
-    if not qdii_data:
-        logger.error("query fund data failed")
-        return
+    lof_list = get_ashare_lof_notify_list()
+    all_lofs = lof_list['stock_lof'] + lof_list['index_lof']
+    qdii_list = get_qdii_notify_list()
+    all_qdiis = qdii_list['hk_qdii'] + qdii_list['us_qdii'] + qdii_list['commodity_qdii']
 
-    funds_dict = parse_fund_data(qdii_data, lof_data)
-    if not funds_dict:
-        logger.error("parse fund data failed")
-        return
+    all_funds = all_lofs + all_qdiis
+    for fund in all_funds:
+        fund_id, premium_rate, apply_status, redeem_status = fund
+        title = fund_id
+        msg = f"{premium_rate:.2f}% {apply_status} {redeem_status}"
 
-    notify_if_premium(funds_dict)
+        if has_notified_today(fund_id):
+            continue
 
-    logger.info("query funds end...")
+        add_notify_count_to_DB(fund_id)
+        logger.info(f"Funds Notification - title: {title}, message: {msg}")
+        notify_handler.send_message(msg, title)
+
+    logger.debug("query funds end...")

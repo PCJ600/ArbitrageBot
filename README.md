@@ -25,7 +25,8 @@ python3 manage.py runserver
 
 ## run testcases
 ```
-python3 manage.py test
+python3 manage.py test # Run all testcases.
+python manage.py test app.tests.FundsNotifyTestCase # Run single testcase.
 ```
 
 ## auto-restart

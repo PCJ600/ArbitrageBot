@@ -1,7 +1,7 @@
 from apscheduler.schedulers.background import BackgroundScheduler
 from django_apscheduler.jobstores import MemoryJobStore
 
-from app.query.query_funds import query_funds
+from app.query.query_funds import monitor_funds_and_notify
 
 import time
 import threading
@@ -25,7 +25,7 @@ class Cronjobs:
     def register_all_cronjobs(self):
         self.scheduler = BackgroundScheduler()
         self.scheduler.add_jobstore(MemoryJobStore(), 'default')
-        self.scheduler.add_job(id="query_funds", func=query_funds, trigger='interval', minutes=7, replace_existing=True)
+        self.scheduler.add_job(id="", func=monitor_funds_and_notify, trigger='interval', minutes=7, replace_existing=True)
         self.scheduler.start()
 
 
