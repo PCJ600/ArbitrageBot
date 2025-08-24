@@ -35,7 +35,7 @@ def check_notify_condition(
     :return: 是否满足通知条件
     """
 
-    def is_open_to_invest(apply_status: str) -> bool:
+    def is_full_open(apply_status: str) -> bool:
         """判断是否开放申购（完全开放）"""
         return apply_status not in ['暂停申购']
     
@@ -79,7 +79,7 @@ def check_notify_condition(
             return True
         
         # 临近收盘溢价>1.1%且开放申购，通知一次
-        if is_near_close and premium_rate > 1.1 and is_open_to_invest(apply_status):
+        if is_near_close and premium_rate > 1.1 and is_full_open(apply_status):
             return True
         
         # 临近收盘可以折价套利，通知一次
