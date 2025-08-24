@@ -5,3 +5,4 @@ chinese_calendar
 pytz
 requests
 mysqlclient
+psutil

@@ -10,14 +10,18 @@
 
 ## Configure your pushplus token on Host
 
+Edit file /config.ini
 ```
-/config.ini
 [DEFAULT]
 token = 12**2b
 ```
-refer to [https://www.pushplus.plus/doc/](https://www.pushplus.plus/doc/)
+More details refer to [https://www.pushplus.plus/doc/](https://www.pushplus.plus/doc/)
 
 ## Configure your holdings in `qdii.py` and `ashare_lof.py`
+
+```
+HOLDING_FUNDS = {'501302', '160924'}
+```
 
 ## Run on Host
 
@@ -31,10 +35,15 @@ pip3 install -r requirements.txt
 python3 manage.py makemigrations
 python3 manage.py migrate
 
-# Run in Host
+# Run in Host (dev)
 python3 manage.py runserver localhost:8000
 
-# Auto-restart by Systemd
+# Run in Host (prod)
+pip install gunicorn
+gunicorn --bind 0.0.0.0:8000 proj.wsgi:application # foreground, for dev/test
+gunicorn --bind 0.0.0.0:8000 --workers 2 --daemon proj.wsgi:application # background, for prod
+
+# Use systemd
 cp conf/arbitrage_bot.service /usr/lib/systemd/system/
 systemctl start arbitrage_bot.service
 systemctl enable arbitrage_bot.service

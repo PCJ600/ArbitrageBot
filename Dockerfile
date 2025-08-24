@@ -10,13 +10,15 @@ RUN sed -i 's|http://deb.debian.org|https://mirrors.tuna.tsinghua.edu.cn|g' /etc
 
 # 2. 安装系统依赖（Python开发工具 + MySQL客户端库）
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3-dev default-libmysqlclient-dev gcc pkg-config \
+    python3-dev \
+    default-libmysqlclient-dev \
+    gcc \
+    pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
-# 3. 安装Python依赖（含mysqlclient）
+# 3. 安装Python依赖（含mysqlclient和gunicorn）
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt && \
-    # 安装后清理编译缓存（减小镜像体积）
+RUN pip install --no-cache-dir -r requirements.txt gunicorn && \
     rm -rf /root/.cache/pip
 
 # 4. 复制项目代码
@@ -28,5 +30,5 @@ COPY proj/ ./proj/
 ENV PYTHONUNBUFFERED=1 \
     PATH="/usr/local/bin:$PATH"
 
-# 6. 启动命令
-CMD ["python3", "manage.py", "runserver", "0.0.0.0:8000"]
+# 6. 启动命令（使用 Gunicorn）
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "1", "--threads", "1", "--access-logfile", "-", "--error-logfile", "-", "proj.wsgi:application"]

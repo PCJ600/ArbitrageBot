@@ -1,8 +1,9 @@
-# app/apps.py
-import sys
 import os
+import sys
+import logging
 from django.apps import AppConfig
-from django.core.checks import register, Error
+
+logger = logging.getLogger(__name__)
 
 class AppConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
@@ -10,21 +11,24 @@ class AppConfig(AppConfig):
 
     def ready(self):
         if self._should_load_cronjobs():
-            @register('cronjobs')
-            def cronjob_check(**kwargs):
-                try:
-                    from app.crons.cronjobs import register_cronjobs
-                    register_cronjobs()
-                    return []  # 必须返回列表！
-                except Exception as e:
-                    return [Error(f"Cronjob failed: {str(e)}")]
+            try:
+                from app.crons.cronjobs import register_cronjobs
+                register_cronjobs()
+                logger.info("Cronjobs loaded (PID: %s)", os.getpid())
+            except Exception as e:
+                logger.critical("Cronjob failed: %s", str(e))
 
     def _should_load_cronjobs(self):
-        """判断是否加载 cronjobs"""
+        if any(cmd in sys.argv for cmd in ('test', 'migrate', 'makemigrations')):
+            return False
         if 'runserver' in sys.argv:
-            return True
+            return os.environ.get('RUN_MAIN') == 'true'
+
+        # prod env
         try:
             import psutil
-            return psutil.Process(os.getppid()).name() in ('gunicorn', 'uwsgi')
-        except:
+            parent_name = psutil.Process(os.getppid()).name().lower()
+            return 'gunicorn' in parent_name
+        except Exception as e:
+            logger.warning("Process detection failed: %s", str(e))
             return False
